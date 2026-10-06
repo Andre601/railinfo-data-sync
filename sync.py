@@ -62,6 +62,8 @@ def fetch_page_content(session: requests.Session) -> str:
     try:
         data = result.json()
 
+        print("Parsed Wiki Page JSON")
+
         pages = data["query"]["pages"]
         page = next(iter(pages.values()))
 
@@ -71,6 +73,12 @@ def fetch_page_content(session: requests.Session) -> str:
         return page["revisions"][0]["slots"]["main"]["content"]
     except (ValueError, KeyError, IndexError, StopIteration) as err:
         raise RuntimeError(f"Unable to fetch current content of {WIKI_PAGE}. HTTP {result.status_code}: {result.text[:500]!r}") from err
+
+def json_equal(first: str, second: str) -> bool:
+    try:
+        return json.loads(first) == json.loads(second)
+    except ValueError as err:
+        raise RuntimeError("Unable to compare Wiki and API JSON") from err
 
 def fetch_csrf_token(session: requests.Session) -> str:
     result = session.get(
@@ -150,7 +158,7 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
         raise RuntimeError(f"Received non-JSON response from page edit: {result.text[:500]!r}") from err
 
     if "error" in edit:
-        raise RuntimeError(f"Encountered Error while updating Wikipage {WIKI_PAGE}: {result}")
+        raise RuntimeError(f"Encountered Error while updating Wikipage {WIKI_PAGE}: {edit}")
     
     if edit.get("edit", {}).get("result") != "Success":
         raise RuntimeError(f"Received non-successful Wiki Edit: {edit}")
@@ -167,7 +175,7 @@ def main() -> None:
 
     old_content = fetch_page_content(session)
 
-    if content == old_content:
+    if json_equal(content, old_content):
         print(f"{WIKI_PAGE} is up-to-date. Skipping page edit.")
         return
     
