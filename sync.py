@@ -100,7 +100,7 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
     edit = result.json().get("edit", {})
 
     if edit.get("result") != "Success":
-        raise RuntimeError(f"Edit of Wiki page {WIKI_PAGE} non-successful! {result}")
+        raise RuntimeError(f"Edit of Wiki page {WIKI_PAGE} non-successful! {result} ({edit})")
     
     print(f"Updated {WIKI_PAGE} ({edit.get("newrevid")})")
     
