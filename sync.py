@@ -23,7 +23,7 @@ API_URL = get_or_error("API_URL")
 WIKI_USERNAME = get_or_error("WIKI_USERNAME")
 WIKI_BOT_PASSWORD = get_or_error("WIKI_BOT_PASSWORD")
 
-WIKI_PAGE = "Module:RailInfo/data"
+WIKI_PAGE = "Template:RailInfo/data"
 
 def fetch_json(session: requests.Session) -> str:
     result = session.get(API_URL)
