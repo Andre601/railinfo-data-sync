@@ -63,7 +63,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
     
     result = session.post(
         WIKI_URL,
-        json = {
+        data = {
             "action": "login",
             "lgname": WIKI_USERNAME,
             "lgpassword": WIKI_BOT_PASSWORD,
@@ -103,7 +103,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
 def update_page(session: requests.Session, csrf_token: str, content: str) -> None:
     result = session.post(
         WIKI_URL,
-        json = {
+        data = {
             "action": "edit",
             "title": WIKI_PAGE,
             "format": "json",
