@@ -30,10 +30,19 @@ def fetch_json(session: requests.Session) -> str:
     result = session.get(API_URL)
     result.raise_for_status()
 
-    if not result:
+    if not result.content:
         raise RuntimeError("Unable to fetch RailInfo JSON!")
+    
+    print(f"Received HTTP Status: {result.status_code}")
+    print(f"Received Content-Type: {result.headers.get("Content-Type", "")}")
 
-    return result.json()
+    try:
+        # Validate that we got valid JSON
+        result.json()
+    except ValueError as err:
+        raise RuntimeError(f"Received Non-JSON value! Received content Type: {result.headers.get("Content-Type", "")}") from err
+
+    return result.text
 
 def fetch_csrf_token(session: requests.Session) -> str:
     result = session.get(
@@ -49,8 +58,8 @@ def fetch_csrf_token(session: requests.Session) -> str:
 
     try:
         login_token = result.json()["query"]["tokens"]["logintoken"]
-    except KeyError as err:
-        raise RuntimeError(f"Unable to fetch Login Token: {result}") from err
+    except (ValueError, KeyError) as err:
+        raise RuntimeError(f"Unable to fetch Login Token. HTTP {result.status_code}: {result.text[:500]!r}") from err
     
     result = session.post(
         WIKI_URL,
@@ -64,6 +73,16 @@ def fetch_csrf_token(session: requests.Session) -> str:
     )
     result.raise_for_status()
 
+    try:
+        login_result = result.json()
+    except ValueError as err:
+        raise RuntimeError(f"Received Non-JSON Response from MediaWiki: {result.text[:500]!r}") from err
+    
+    if login_result.get("login", {}).get("result") != "Success":
+        raise RuntimeError(f"Login failed: {login_result}")
+    
+    print("Logged into Wiki! Obtaining CSRF Token...")
+
     result = session.get(
         WIKI_URL,
         params = {
@@ -76,8 +95,8 @@ def fetch_csrf_token(session: requests.Session) -> str:
 
     try:
         csrf_token = result.json()["query"]["tokens"]["csrftoken"]
-    except KeyError as err:
-        raise RuntimeError(f"Couldn't fetch CSRF Token: {result}") from err
+    except (ValueError, KeyError) as err:
+        raise RuntimeError(f"Couldn't fetch CSRF Token. HTTP {result.status_code}: {result.text[:500]!r}") from err
     
     return csrf_token
 
@@ -97,17 +116,20 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
     )
     result.raise_for_status()
 
-    if "error" in result:
+    try:
+        edit = result.json()
+    except ValueError as err:
+        raise RuntimeError(f"Received non-JSON response from page edit: {result.text[:500]!r}") from err
+
+    if "error" in edit:
         raise RuntimeError(f"Encountered Error while updating Wikipage {WIKI_PAGE}: {result}")
     
-    json = result.json()
-
-    print(json)
-
     if edit.get("edit", {}).get("result") != "Success":
-        raise RuntimeError(f"Edit of Wiki page {WIKI_PAGE} non-successful! {result} ({edit})")
+        raise RuntimeError(f"Received non-successful Wiki Edit: {edit}")
     
-    print(f"Updated {WIKI_PAGE} ({edit.get("newrevid")})")
+    new_revision = edit["edit"].get("newrevid")
+
+    print(f"Updated {WIKI_PAGE} ({new_revision})")
     
 def main() -> None:
     session = requests.Session()
