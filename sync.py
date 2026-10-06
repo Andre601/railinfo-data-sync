@@ -44,6 +44,34 @@ def fetch_json(session: requests.Session) -> str:
 
     return result.text
 
+def fetch_page_content(session: requests.Session) -> str:
+    result = session.get(
+        WIKI_URL,
+        params = {
+            "action": "query",
+            "prop": "revisions",
+            "titles": WIKI_PAGE,
+            "rvprop": "content",
+            "rvslots": "main",
+            "format": "json",
+            "formatversion": "2"
+        }
+    )
+    result.raise_for_status()
+
+    try:
+        data = result.json()
+
+        pages = data["query"]["pages"]
+        page = next(iter(pages.values()))
+
+        if "missing" in page:
+            return ""
+
+        return page["revisions"][0]["slots"]["main"]["content"]
+    except (ValueError, KeyError, IndexError, StopIteration) as err:
+        raise RuntimeError(f"Unable to fetch current content of {WIKI_PAGE}. HTTP {result.status_code}: {result.text[:500]!r}") from err
+
 def fetch_csrf_token(session: requests.Session) -> str:
     result = session.get(
         WIKI_URL,
@@ -136,6 +164,13 @@ def main() -> None:
     session.headers.update({"User-Agent": USER_AGENT})
 
     content = fetch_json(session)
+
+    old_content = fetch_page_content(session)
+
+    if content == old_content:
+        print(f"{WIKI_PAGE} is up-to-date. Skipping page edit.")
+        return
+    
     csrf_token = fetch_csrf_token(session)
 
     update_page(session, csrf_token, content)
