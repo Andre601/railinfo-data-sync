@@ -90,9 +90,9 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
             "text": content,
             "contentformat": "application/json",
             "contentmodel": "json",
-            "bot": True,
-            "token": csrf_token
-        }
+            "bot": True
+        },
+        params = {"token": csrf_token}
     )
     result.raise_for_status()
 
