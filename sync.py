@@ -47,7 +47,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
     result.raise_for_status()
 
     try:
-        login_token = result["query"]["tokens"]["logintoken"]
+        login_token = result.json()["query"]["tokens"]["logintoken"]
     except KeyError as err:
         raise RuntimeError(f"Unable to fetch Login Token: {result}") from err
     
@@ -97,7 +97,7 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
     if "error" in result:
         raise RuntimeError(f"Encountered Error while updating Wikipage {WIKI_PAGE}: {result}")
     
-    edit = result.get("edit", {})
+    edit = result.json().get("edit", {})
 
     if edit.get("result") != "Success":
         raise RuntimeError(f"Edit of Wiki page {WIKI_PAGE} non-successful! {result}")
