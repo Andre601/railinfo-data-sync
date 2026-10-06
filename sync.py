@@ -59,7 +59,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
             "lgname": WIKI_USERNAME,
             "lgpassword": WIKI_BOT_PASSWORD,
             "lgtoken": login_token,
-            "format": "json",
+            "format": "json"
         }
     )
     result.raise_for_status()
@@ -69,7 +69,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
         params = {
             "action": "query",
             "meta": "tokens",
-            "format": "json",
+            "format": "json"
         }
     )
     result.raise_for_status()
@@ -92,7 +92,7 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
             "contentformat": "application/json",
             "contentmodel": "json",
             "bot": True,
-            "token": csrf_token,
+            "token": csrf_token
         }
     )
     result.raise_for_status()
