@@ -65,7 +65,7 @@ def fetch_page_content(session: requests.Session) -> str:
         print("Parsed Wiki Page JSON")
 
         pages = data["query"]["pages"]
-        page = next(iter(pages.values()))
+        page = pages[0]
 
         if "missing" in page:
             return ""
