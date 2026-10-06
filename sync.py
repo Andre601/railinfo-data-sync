@@ -1,6 +1,7 @@
 import os
 import sys
 import requests
+import json
 
 """
 Originally taken from https://www.mediawiki.org/wiki/API%253AEdit/Sample_code_1
@@ -53,12 +54,12 @@ def fetch_csrf_token(session: requests.Session) -> str:
     
     result = session.post(
         WIKI_URL,
-        data = {
+        json = {
             "action": "login",
             "lgname": WIKI_USERNAME,
             "lgpassword": WIKI_BOT_PASSWORD,
             "lgtoken": login_token,
-            "format": "json"
+            "format": "json",
         }
     )
     result.raise_for_status()
@@ -68,7 +69,7 @@ def fetch_csrf_token(session: requests.Session) -> str:
         params = {
             "action": "query",
             "meta": "tokens",
-            "format": "json"
+            "format": "json",
         }
     )
     result.raise_for_status()
@@ -83,16 +84,16 @@ def fetch_csrf_token(session: requests.Session) -> str:
 def update_page(session: requests.Session, csrf_token: str, content: str) -> None:
     result = session.post(
         WIKI_URL,
-        data = {
+        json = {
             "action": "edit",
             "title": WIKI_PAGE,
             "format": "json",
             "text": content,
             "contentformat": "application/json",
             "contentmodel": "json",
-            "bot": True
-        },
-        params = {"token": csrf_token}
+            "bot": True,
+            "token": csrf_token,
+        }
     )
     result.raise_for_status()
 
