@@ -4,6 +4,7 @@ import requests
 
 """
 Originally taken from https://www.mediawiki.org/wiki/API%253AEdit/Sample_code_1
+Modified for this purpose of syncing JSON data from an API to a wiki page.
 """
 
 def get_or_error(name: str) -> str:
