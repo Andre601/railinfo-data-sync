@@ -15,6 +15,8 @@ def get_or_error(name: str) -> str:
 
     return value
 
+USER_AGENT = get_or_error("USER_AGENT")
+
 WIKI_URL = get_or_error("WIKI_URL")
 API_URL = get_or_error("API_URL")
 
@@ -104,7 +106,7 @@ def update_page(session: requests.Session, csrf_token: str, content: str) -> Non
     
 def main() -> None:
     session = requests.Session()
-    session.headers.update({"User-Agent": "RailInfo-Wikisync/1.0"})
+    session.headers.update({"User-Agent": USER_AGENT})
 
     content = fetch_json(session)
     csrf_token = fetch_csrf_token(session)
